@@ -171,7 +171,13 @@ void CreateEmbeddedWebview() {
 
 ### 1. 使用 Conan 2.x
 
-在项目的 `conanfile.py` 或 `conanfile.txt` 中引入：
+#### 添加远端源（公开只读，无需账号 Token）
+```bash
+conan remote add xyz1001-conan https://gitlab.com/api/v4/projects/88391881/packages/conan
+```
+
+#### 在项目中使用
+在项目的 `conanfile.py` 中引入：
 
 ```python
 def requirements(self):
@@ -179,7 +185,7 @@ def requirements(self):
     self.requires("embedview/0.1.2")
 
 def configure(self):
-    # 如需启用 Qt 封装
+    # 如需启用 Qt 封装（默认关闭）
     self.options["embedview"].with_qt = True
 ```
 
