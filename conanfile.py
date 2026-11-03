@@ -3,11 +3,11 @@ from conan.errors import ConanInvalidConfiguration
 from conan.tools.cmake import CMake, CMakeDeps, CMakeToolchain, cmake_layout
 
 
-class WebviewAdapterConan(ConanFile):
-    name = "webview-adapter"
+class EmbedviewConan(ConanFile):
+    name = "embedview"
     version = "0.1.2"
     package_type = "library"
-    description = "C++ webview adapter"
+    description = "C++ webview adapter library for window embedding"
     settings = "os", "compiler", "build_type", "arch"
     options = {"shared": [True, False], "fPIC": [True, False], "with_qt": [True, False]}
     default_options = {"shared": False, "fPIC": True, "with_qt": False}
@@ -23,7 +23,7 @@ class WebviewAdapterConan(ConanFile):
 
     def validate(self):
         if self.settings.os not in ("Windows", "Linux"):
-            raise ConanInvalidConfiguration("webview-adapter 仅支持 Windows 和 Linux")
+            raise ConanInvalidConfiguration("embedview 仅支持 Windows 和 Linux")
 
     def requirements(self):
         self.requires("webview/0.12.0")
@@ -54,9 +54,9 @@ class WebviewAdapterConan(ConanFile):
     def generate(self):
         tc = CMakeToolchain(self)
         tc.variables["BUILD_SHARED_LIBS"] = bool(self.options.shared)
-        tc.variables["WEBVIEW_ADAPTER_WITH_QT"] = self.options.with_qt
+        tc.variables["EMBEDVIEW_WITH_QT"] = self.options.with_qt
         # 仅在 Conan 组件确实声明了库时，允许 CMakeDeps 的 core 接口包装目标。
-        tc.variables["WEBVIEW_ADAPTER_CONAN_CORE_HAS_LIBRARY"] = (
+        tc.variables["EMBEDVIEW_CONAN_CORE_HAS_LIBRARY"] = (
             self._webview_component() == "core"
         )
         tc.generate()
@@ -71,12 +71,12 @@ class WebviewAdapterConan(ConanFile):
         CMake(self).install()
 
     def package_info(self):
-        self.cpp_info.set_property("cmake_file_name", "webview-adapter")
+        self.cpp_info.set_property("cmake_file_name", "embedview")
         native = self.cpp_info.components["native"]
-        native.set_property("cmake_target_name", "webview_adapter::native")
-        native.libs = ["webview_adapter_native"]
+        native.set_property("cmake_target_name", "embedview::native")
+        native.libs = ["embedview_native"]
         if self.options.shared:
-            native.defines = ["WEBVIEW_ADAPTER_NATIVE_DLL"]
+            native.defines = ["EMBEDVIEW_NATIVE_DLL"]
         # 与生成阶段检查的实际组件保持一致，传递静态库所需的链接依赖。
         native.requires = [f"webview::{self._webview_component()}"]
         if self.settings.os == "Windows":
@@ -92,8 +92,8 @@ class WebviewAdapterConan(ConanFile):
             native.requires.extend(["gtk::gtk", "webkit2gtk::webkit2gtk"])
         if self.options.with_qt:
             qt = self.cpp_info.components["qt"]
-            qt.set_property("cmake_target_name", "webview_adapter::qt")
-            qt.libs = ["webview_adapter_qt"]
+            qt.set_property("cmake_target_name", "embedview::qt")
+            qt.libs = ["embedview_qt"]
             if self.options.shared:
-                qt.defines = ["WEBVIEW_ADAPTER_QT_DLL"]
+                qt.defines = ["EMBEDVIEW_QT_DLL"]
             qt.requires = ["native", "qt::qtWidgets"]

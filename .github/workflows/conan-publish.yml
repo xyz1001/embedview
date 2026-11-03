@@ -59,4 +59,4 @@ jobs:
       - name: Upload to GitLab Remote
         if: github.event_name != 'pull_request' && (github.event_name != 'workflow_dispatch' || inputs.upload == true)
         run: |
-          conan upload "webview-adapter/*" -r gitlab --confirm
+          conan upload "embedview/*" -r gitlab --confirm

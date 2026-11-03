@@ -9,7 +9,7 @@
 #include <string>
 #include <system_error>
 
-namespace webview::detail {
+namespace embedview::detail {
 
 enum class State { kIdle, kInitializing, kReady, kFailed, kClosing, kClosed };
 
@@ -20,9 +20,9 @@ struct PumpBudget {
 
 class WebViewAccess {
 public:
-    static WEBVIEW_ADAPTER_NATIVE_API std::error_code SynchronizeBounds(
+    static EMBEDVIEW_NATIVE_API std::error_code SynchronizeBounds(
             WebView &webview);
-    static WEBVIEW_ADAPTER_NATIVE_API bool IsClosed(
+    static EMBEDVIEW_NATIVE_API bool IsClosed(
             const WebView &webview) noexcept;
 };
 
@@ -59,4 +59,4 @@ protected:
 std::shared_ptr<Backend> MakeBackend();
 void ProcessPlatformEvents(PumpBudget budget);
 
-}  // namespace webview::detail
+}  // namespace embedview::detail

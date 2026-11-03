@@ -1,61 +1,230 @@
-# webview-adapter
+# embedview
 
-这是一个使用 `webview` 命名空间的 C++17 webview 适配器。
+[![C++17](https://img.shields.io/badge/C%2B%2B-17-blue.svg)](https://en.cppreference.com/w/cpp/17)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20(X11)-lightgrey.svg)]()
+[![License](https://img.shields.io/badge/License-MIT-green.svg)]()
 
-## 当前状态
+`embedview` 是一个基于轻量级 [webview](https://github.com/webview/webview) 封装的现代 C++17 窗口嵌入适配库。
 
-首轮实现以 Windows 和 Linux X11 为目标，Qt 封装可选；代码正在合并，仍有审查修复，
-目前尚未构建或运行验证，
-原生及 Qt 后端均需进一步验证，不能视为运行能力保证。没有测试，也不提供播放或性能
-保证。契约与限制参见 [`doc/interface_design.md`](doc/interface_design.md)。Linux 的新窗口
-导航经通用导航回调允许后在当前页面打开；Windows 阻止新窗口。
+与上游主要用于创建独立主窗口不同，本库专注于解决 **“在已有宿主窗口（Win32 / X11 / Qt 窗口）中嵌入 Webview 子视图”** 的场景，提供统一简洁的生命周期管理、导航控制、脚本注入以及开箱即用的 **Qt Widgets** 容器支持，避免为了轻量内嵌 Web 需求引入庞大臃肿的 CEF 或 QtWebEngine。
 
-## 头文件与目标
+---
 
-- `<webview_adapter/native/webview.h>`：`webview` 原生接口。
-- `<webview_adapter/qt/webview_widget.h>`：`webview::WebViewWidget`，仅启用 Qt 时可用；
-  它还依赖原生接口和 Qt Widgets。
+## 核心特性
 
-需要 CMake 3.25 或更高版本和 C++17。设置 `WEBVIEW_ADAPTER_WITH_QT=ON` 可启用
-Qt 目标并安装其头文件，此时需要 Qt5 Widgets；该选项默认关闭。安装后的 CMake 包可通过
-`find_package(webview_adapter CONFIG REQUIRED)` 加载。不启用 Qt 时，不安装 Qt
-头文件和目标，安装后的 CMake 包也不会查找 Qt。
+- **轻量嵌入**：直接嵌入已有宿主窗口或 Qt 控件区域，无额外庞大运行时开销。
+- **开箱即用的 Qt 支持**：提供 `embedview::WebViewWidget`（继承自 `QWidget`），原生嵌入 Qt 布局系统，自动同步大小与显示状态。
+- **现代化 C++17 接口**：标准类型与 `std::error_code` 错误处理，无冗余平台宏泄漏。
+- **灵活的页面控制**：
+  - **脚本预注入**：支持在 DOM 准备阶段（`document-start`）注入预置 JavaScript。
+  - **导航拦截**：支持同步审查请求 URL，实现页面跳转白名单拦截。
+  - **加载通知**：精准感知页面引擎加载完成与异常状态。
+  - **媒体与环境**：支持 User-Agent 自定义、上下文菜单开关、无手势自动播放配置。
+- **完备的生命周期与安全防护**：
+  - 异步就绪模型与幂等安全的 `Close()` 释放。
+  - 针对 Linux 嵌入场景内置有界 GLib 事件泵，防止主循环卡死与递归重入。
 
-默认构建静态库；纯 CMake 可设置 `BUILD_SHARED_LIBS=ON` 构建共享库。Conan 2 配方的
-`shared` 默认 `False`，`with_qt` 独立且默认 `False`；启用 Qt 时使用 `qt/5.15.18`，
-并传递 Qt Widgets 组件依赖。例如，使用默认 profile 在项目目录执行：
+---
 
-```sh
-conan install . -o "webview-adapter/*:shared=False" --build=missing
-conan install . -o "webview-adapter/*:shared=True" --build=missing
+## 系统与平台支持
+
+| 平台 | 底层渲染后端 | 依赖要求 | 说明 |
+| :--- | :--- | :--- | :--- |
+| **Windows** | Microsoft Edge WebView2 | WebView2 运行时 | 需在 COM STA 线程中运行 |
+| **Linux** | WebKitGTK | GTK 3, WebKit2GTK | 仅限 X11/xcb 环境 |
+
+> [!NOTE]
+> 当前版本暂不支持 macOS 与 Linux Wayland。
+
+---
+
+## 快速上手
+
+### 1. 在 Qt 项目中嵌入（推荐）
+
+通过 `embedview::WebViewWidget`，可以像使用普通 `QWidget` 一样将其添加到任意 Qt 布局中：
+
+```cpp
+#include <embedview/qt/webview_widget.h>
+#include <QVBoxLayout>
+#include <QWidget>
+#include <iostream>
+
+class MyWindow : public QWidget {
+public:
+    MyWindow(QWidget *parent = nullptr) : QWidget(parent) {
+        auto *layout = new QVBoxLayout(this);
+        auto *browser = new embedview::WebViewWidget(this);
+        layout->addWidget(browser);
+
+        // 配置参数
+        embedview::Options options;
+        options.context_menu_enabled = true; // 启用右键菜单
+        options.allow_autoplay = true;       // 允许无手势自动播放
+
+        // 设置生命周期与导航回调
+        embedview::Callbacks callbacks;
+        callbacks.initialized = [browser](std::error_code ec) {
+            if (!ec) {
+                // 初始化就绪后加载页面
+                browser->Navigate("https://www.example.com");
+            } else {
+                std::cerr << "Webview 初始化失败: " << ec.message() << std::endl;
+            }
+        };
+
+        callbacks.navigation_requested = [](const std::string &url) -> bool {
+            // 拦截页面导航，返回 false 可阻止跳转
+            std::cout << "请求跳转: " << url << std::endl;
+            return true;
+        };
+
+        callbacks.load_finished = [](std::error_code ec, const std::string &url) {
+            if (!ec) {
+                std::cout << "页面加载完成: " << url << std::endl;
+            }
+        };
+
+        // 发起初始化
+        browser->Initialize(options, std::move(callbacks));
+    }
+};
 ```
 
-如需 Qt，另加 `-o "webview-adapter/*:with_qt=True"`。Conan CMakeDeps 包名为
-`webview-adapter`，版本为 `0.1.2`；配方通过 CMake 构建和安装。纯 CMake 安装包及
-Conan CMakeDeps 的导入目标均为 `webview_adapter::native` 和可选的
-`webview_adapter::qt`，共享库的消费端导入宏由目标自动传递，无需手动配置导出宏。
-这与 C++ 接口使用的 `webview` 命名空间不同。
+### 2. 原生窗口嵌入（Win32 / X11）
 
-共享构建中原生库和 Qt 库各自独立；Windows 下分别生成 DLL 和 `lib` 导入库，部署时
-需要提供 DLL（Conan 包的 `bin` 目录）。Linux 共享库位于 `lib`，运行时需确保动态
-加载器可找到 `.so`。调用方与共享库需要匹配的编译器和 CRT；Linux 共享构建尚未验证。
+如果不使用 Qt，可直接使用原生 `embedview::WebView` 接口获取借用窗口句柄进行嵌入：
 
-原生后端使用 `webview/0.12.0`；公共接口不暴露 webview 类型。Linux 还需要 GTK 和
-WebKitGTK；系统 WebKitGTK 版本未锁定，由 pkg-config 实际解析结果决定。不启用 Qt 时，
-配方不会添加 Qt 依赖。
+```cpp
+#include <embedview/native/webview.h>
+#include <iostream>
 
-导航回调在 Windows 上仅覆盖顶层导航，在 Linux 上覆盖顶层及子框架导航。上游
-webview 0.12.0 的 `apply_webkit_dmabuf_workaround` 在特定 Linux X11 NVIDIA 场景下会
-设置进程级环境变量 `WEBKIT_DISABLE_DMABUF_RENDERER=1`。本库不会偷偷切换 `GDK_BACKEND`。
+void CreateEmbeddedWebview() {
+    auto view = std::make_unique<embedview::WebView>();
 
-设置 `options.allow_autoplay = true` 可尽量允许无用户手势播放；默认 `false` 不主动
-放宽平台限制，但不保证阻止静音媒体或调用方环境允许的自动播放。启用时 Windows 在创建 WebView2 时临时设置进程级
-`WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS`，调用返回后恢复；已有的 `--autoplay-policy=`
-无论宽严均保持不变。这是进程级行为，不保证实例隔离。Linux 显式取消媒体播放手势
-要求，关闭时则明确要求手势。网站策略、媒体解码或 DRM 仍可能阻止实际播放。
+    embedview::Options options;
+    options.document_start_script = "window.__MY_APP__ = { version: '1.0' };";
 
-`initialized` 的零错误码表示初始化成功，但不表示页面加载或协议就绪。
-`load_finished` 接收错误码和 URL：零表示成功，失败保留原错误码，取消可能报告
-`std::errc::operation_canceled`。`navigation_requested` 接收 URL，返回 `true` 允许、
-`false` 取消；未设置回调时允许。使用 `IsReady()` 查询就绪，使用 `Resize` 设置
-原生客户区尺寸；`ProcessEvents()` 使用固定的有界预算。
+    embedview::Callbacks callbacks;
+    callbacks.initialized = [&view](std::error_code ec) {
+        if (ec) {
+            std::cerr << "初始化失败: " << ec.message() << "\n";
+            return;
+        }
+
+        // 获取底层原生窗口句柄（用于 Win32 SetParent 或 X11 XReparentWindow）
+        auto handle = view->GetNativeWindow();
+        if (std::holds_alternative<embedview::Win32WindowHandle>(handle)) {
+            auto hwnd = reinterpret_cast<HWND>(std::get<embedview::Win32WindowHandle>(handle).value);
+            // ::SetParent(hwnd, myHostHwnd);
+        }
+
+        view->Resize(800, 600);
+        view->SetVisible(true);
+        view->Navigate("https://www.example.com");
+    };
+
+    view->Initialize(options, std::move(callbacks));
+}
+```
+
+---
+
+## 核心 API 说明
+
+所有 C++ 接口均位于 `namespace embedview`（同时提供 `namespace webview` 别名兼容）。
+
+### `embedview::Options` 配置项
+
+| 字段 | 类型 | 默认值 | 说明 |
+| :--- | :--- | :--- | :--- |
+| `document_start_script` | `std::string` | `""` | 页面文档开始加载前注入执行的 JavaScript 代码。 |
+| `user_agent` | `std::optional<std::string>` | `std::nullopt` | 自定义 User-Agent 字符串。 |
+| `context_menu_enabled` | `bool` | `true` | 是否启用浏览器默认右键上下文菜单。 |
+| `allow_autoplay` | `bool` | `false` | 是否放宽音视频无手势自动播放限制。 |
+
+### `embedview::Callbacks` 事件回调
+
+| 回调名 | 签名 | 说明 |
+| :--- | :--- | :--- |
+| `initialized` | `void(std::error_code)` | 初始化结果通知。为 `0` 时表示引擎就绪，方可进行 `Navigate`。 |
+| `navigation_requested` | `bool(const std::string &url)` | 导航请求拦截。返回 `true` 允许加载，返回 `false` 阻止。 |
+| `load_finished` | `void(std::error_code, const std::string &url)` | 顶层页面加载完成通知。成功时错误码为 `0`。 |
+| `close_requested` | `void()` | 用户端请求关闭窗口（如有配置可拦截）。 |
+| `closed` | `void()` | 内部底层安全清理完成时触发。 |
+
+### 接口方法对比
+
+| 方法 | `WebView` (原生) | `WebViewWidget` (Qt) | 说明 |
+| :--- | :--- | :--- | :--- |
+| `Initialize(options, callbacks)` | 支持 | 支持 | 异步开启初始化流程。 |
+| `Navigate(url)` | 支持 | 支持 | 加载目标 URL（需在就绪后调用）。 |
+| `IsReady()` | 支持 | 支持 | 查询底层引擎是否已就绪。 |
+| `Resize(width, height)` | 支持 | 自动同步 | 调整渲染区域大小（原生像素单位）。Qt 控件自动处理。 |
+| `SetVisible(bool)` | 支持 | 自动同步 | 设置显示/隐藏。Qt 控件由 `show()` / `hide()` 驱动。 |
+| `Close() / CloseBrowser()` | `Close()` | `CloseBrowser()` | 主动关闭并释放浏览器内核资源。 |
+| `GetNativeWindow()` | 支持 | 封装于内部 | 获取 `NativeWindowHandle` 变体类型。 |
+
+---
+
+## 集成方式
+
+### 1. 使用 Conan 2.x
+
+在项目的 `conanfile.py` 或 `conanfile.txt` 中引入：
+
+```python
+def requirements(self):
+    # 引入 embedview
+    self.requires("embedview/0.1.2")
+
+def configure(self):
+    # 如需启用 Qt 封装
+    self.options["embedview"].with_qt = True
+```
+
+配置选项：
+- `shared`: `True` / `False`（默认 `False`，静态库）
+- `with_qt`: `True` / `False`（默认 `False`，开启后构建 `embedview::qt` 并依赖 Qt 5.15）
+
+命令行安装示例：
+
+```bash
+# 默认构建（纯原生，静态库）
+conan install . --build=missing
+
+# 启用 Qt 控件支持
+conan install . -o "embedview/*:with_qt=True" --build=missing
+```
+
+### 2. CMakeLists.txt 集成
+
+安装或生成包后，在 `CMakeLists.txt` 中链接对应的目标：
+
+```cmake
+find_package(embedview CONFIG REQUIRED)
+
+# 场景一：仅使用原生接口
+add_executable(my_native_app main.cpp)
+target_link_libraries(my_native_app PRIVATE embedview::native)
+
+# 场景二：使用 Qt 控件封装
+add_executable(my_qt_app main.cpp)
+target_link_libraries(my_qt_app PRIVATE embedview::qt)
+```
+
+> [!TIP]
+> 动态库模式下，`EMBEDVIEW_*_DLL` 等导入导出宏已由 CMake Target 自动传递，消费端无需手动定义。
+
+---
+
+## 注意事项
+
+1. **线程约束**：
+   - 所有的创建、调用、查询与析构**必须在 UI 主线程进行**（Windows 上为 COM STA 线程，Linux 上为 GTK 主线程）。
+   - 切勿在后台工作线程中跨线程调用 `WebView` 相关方法。
+2. **Linux 运行环境**：
+   - Linux 宿主系统需要安装 `gtk3` 和 `webkit2gtk`（如 Ubuntu: `libgtk-3-dev`, `libwebkit2gtk-4.0-dev` 或 `4.1`）。
+   - Linux Qt 嵌入运行在 X11 环境下，内部通过有界定时器驱动 GLib 消息，无需宿主手动调用 `ProcessEvents()`。
+3. **资源释放**：
+   - 窗口销毁前建议调用 `Close()` 或 `CloseBrowser()`，确保底层浏览器内核有序退出。

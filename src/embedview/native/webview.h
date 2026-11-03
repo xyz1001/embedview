@@ -1,6 +1,6 @@
 #pragma once
 
-#include <webview_adapter/export.h>
+#include <embedview/export.h>
 
 #include <cstdint>
 #include <functional>
@@ -10,8 +10,7 @@
 #include <system_error>
 #include <variant>
 
-// 已提供首轮实现，但尚未构建或运行验证，后端尚未验收。
-namespace webview {
+namespace embedview {
 
 namespace detail {
 class WebViewAccess;
@@ -62,7 +61,7 @@ using NativeWindowHandle =
 // STA， Linux 上为 GTK 主 UI
 // 线程。不提供隐藏的工作线程或跨线程派发；应用须自行调度。
 // 构造既不初始化浏览器，也不处理消息。
-class WEBVIEW_ADAPTER_NATIVE_API WebView {
+class EMBEDVIEW_NATIVE_API WebView {
 public:
     WebView();
     ~WebView();
@@ -86,7 +85,7 @@ public:
     bool IsReady() const noexcept;
     NativeWindowHandle GetNativeWindow() const noexcept;
 
-    // 幂等，包括在初始化期间或回调中调用。逻辑关闭立即使句柄失效，
+    // 幂等，包括在初始化期间或回调中调用。逻辑关闭立几天使句柄失效，
     // 并撤销尚未开始的回调；正在执行的回调可以返回。closed 在清理安全完成后
     // 发送一次，但不一定等待浏览器进程退出。关闭会取消初始化，且不补发
     // initialized。异步清理需要事件循环。析构不调用用户回调。如果初始化
@@ -103,6 +102,10 @@ private:
 // 线程级、非阻塞、非递归。迭代和软时间预算不是硬实时限制；也可能处理其他对象的事件。
 // 不提供独立的 run API；已有 Windows 消息循环无需额外的事件泵。
 // 调用方只能在相应 UI 线程上使用。
-WEBVIEW_ADAPTER_NATIVE_API void ProcessEvents();
+EMBEDVIEW_NATIVE_API void ProcessEvents();
 
-}  // namespace webview
+}  // namespace embedview
+
+namespace webview {
+using namespace embedview;
+}

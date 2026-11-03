@@ -1,7 +1,7 @@
-#include <webview_adapter/native/webview.h>
+#include <embedview/native/webview.h>
 #include <iostream>
 
 int main() {
-    std::cout << "webview-adapter package test successfully compiled and linked!" << std::endl;
+    std::cout << "embedview package test successfully compiled and linked!" << std::endl;
     return 0;
 }

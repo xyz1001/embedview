@@ -1,7 +1,7 @@
 #pragma once
 
-#include <webview_adapter/export.h>
-#include <webview_adapter/native/webview.h>
+#include <embedview/export.h>
+#include <embedview/native/webview.h>
 #include <QWidget>
 
 #include <memory>
@@ -13,7 +13,7 @@ class QHideEvent;
 class QResizeEvent;
 class QShowEvent;
 
-namespace webview {
+namespace embedview {
 
 // 构造不初始化浏览器，也不处理消息。原生接口的创建线程、
 // 回调和析构规则同样适用于此；initialized 表示原生初始化与 Qt 封装均已成功。
@@ -25,7 +25,7 @@ namespace webview {
 // CloseBrowser 的拆包装、关闭原生层顺序。Win/X11
 // 的实际外来窗口行为仍待运行复核。 不支持 Wayland 和
 // macOS；不提供播放或性能保证。
-class WEBVIEW_ADAPTER_QT_API WebViewWidget : public QWidget {
+class EMBEDVIEW_QT_API WebViewWidget : public QWidget {
 public:
     explicit WebViewWidget(QWidget *parent = nullptr);
     ~WebViewWidget() override;
@@ -55,4 +55,8 @@ private:
     std::unique_ptr<Impl> impl_;
 };
 
-}  // namespace webview
+}  // namespace embedview
+
+namespace webview {
+using WebViewWidget = embedview::WebViewWidget;
+}

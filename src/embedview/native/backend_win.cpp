@@ -23,7 +23,7 @@
 #include <map>
 #include <utility>
 
-namespace webview::detail {
+namespace embedview::detail {
 namespace {
 using Microsoft::WRL::Callback;
 using Microsoft::WRL::ComPtr;
@@ -780,5 +780,5 @@ void ProcessPlatformEvents(PumpBudget budget) {
         DispatchMessageW(&msg);
     }
 }
-}  // namespace webview::detail
+}  // namespace embedview::detail
 #endif

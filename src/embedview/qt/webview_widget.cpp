@@ -19,7 +19,7 @@
 #include <vector>
 #endif
 
-namespace webview {
+namespace embedview {
 namespace {
 
 std::error_code Error(std::errc value) {
@@ -449,4 +449,4 @@ void WebViewWidget::closeEvent(QCloseEvent *event) {
     }
 }
 
-}  // namespace webview
+}  // namespace embedview

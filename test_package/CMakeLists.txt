@@ -4,7 +4,7 @@ project(test_package LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(webview-adapter CONFIG REQUIRED)
+find_package(embedview CONFIG REQUIRED)
 
 add_executable(test_package test_package.cpp)
-target_link_libraries(test_package PRIVATE webview_adapter::native)
+target_link_libraries(test_package PRIVATE embedview::native)

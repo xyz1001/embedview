@@ -4,7 +4,7 @@
 #include <thread>
 #include <utility>
 
-namespace webview {
+namespace embedview {
 using detail::State;
 
 namespace {
@@ -340,4 +340,4 @@ void ProcessEvents() {
     }
 }
 
-}  // namespace webview
+}  // namespace embedview
