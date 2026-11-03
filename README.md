@@ -1,6 +1,6 @@
 # webview-adapter
 
-这是一个使用 `webview_adapter` 命名空间的 C++17 webview 适配器。
+这是一个使用 `webview` 命名空间的 C++17 webview 适配器。
 
 ## 当前状态
 
@@ -12,8 +12,8 @@
 
 ## 头文件与目标
 
-- `<webview_adapter/native/webview.h>`：`webview_adapter` 原生接口。
-- `<webview_adapter/qt/webview_widget.h>`：`webview_adapter::qt`，仅启用 Qt 时可用；
+- `<webview_adapter/native/webview.h>`：`webview` 原生接口。
+- `<webview_adapter/qt/webview_widget.h>`：`webview::WebViewWidget`，仅启用 Qt 时可用；
   它还依赖原生接口和 Qt Widgets。
 
 需要 CMake 3.25 或更高版本和 C++17。设置 `WEBVIEW_ADAPTER_WITH_QT=ON` 可启用
@@ -25,6 +25,8 @@ Qt 目标并安装其头文件，此时需要 Qt5 Widgets；该选项默认关�
 `with_qt` 选项；启用时使用 `qt/5.15.18`，并传递 Qt Widgets 组件依赖。其 CMakeDeps
 包名为 `webview-adapter`，版本为 `0.1.2`。Conan 和 CMake 选项分别用于各自的
 工作流程；配方通过 CMake 构建和安装。
+CMake 导入目标命名空间仍为 `webview_adapter`，目标为
+`webview_adapter::native` 和可选的 `webview_adapter::qt`。
 
 原生后端使用 `webview/0.12.0`；公共接口不暴露 webview 类型。Linux 还需要 GTK 和
 WebKitGTK；系统 WebKitGTK 版本未锁定，由 pkg-config 实际解析结果决定。不启用 Qt 时，

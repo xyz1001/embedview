@@ -9,7 +9,7 @@
 #include <variant>
 
 // 已提供首轮实现，但尚未构建或运行验证，后端尚未验收。
-namespace webview_adapter {
+namespace webview {
 
 namespace detail {
 class WebViewAccess;
@@ -103,4 +103,4 @@ private:
 // 调用方只能在相应 UI 线程上使用。
 void ProcessEvents();
 
-}  // namespace webview_adapter
+}  // namespace webview

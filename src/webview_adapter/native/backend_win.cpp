@@ -23,7 +23,7 @@
 #include <map>
 #include <utility>
 
-namespace webview_adapter::detail {
+namespace webview::detail {
 namespace {
 using Microsoft::WRL::Callback;
 using Microsoft::WRL::ComPtr;
@@ -780,5 +780,5 @@ void ProcessPlatformEvents(PumpBudget budget) {
         DispatchMessageW(&msg);
     }
 }
-}  // namespace webview_adapter::detail
+}  // namespace webview::detail
 #endif

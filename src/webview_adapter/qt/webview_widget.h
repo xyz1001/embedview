@@ -12,7 +12,7 @@ class QHideEvent;
 class QResizeEvent;
 class QShowEvent;
 
-namespace webview_adapter {
+namespace webview {
 
 // 构造不初始化浏览器，也不处理消息。原生接口的创建线程、
 // 回调和析构规则同样适用于此；initialized 表示原生初始化与 Qt 封装均已成功。
@@ -54,4 +54,4 @@ private:
     std::unique_ptr<Impl> impl_;
 };
 
-}  // namespace webview_adapter
+}  // namespace webview

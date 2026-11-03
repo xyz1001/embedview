@@ -9,7 +9,7 @@
 #include <string>
 #include <system_error>
 
-namespace webview_adapter::detail {
+namespace webview::detail {
 
 enum class State { kIdle, kInitializing, kReady, kFailed, kClosing, kClosed };
 
@@ -57,4 +57,4 @@ protected:
 std::shared_ptr<Backend> MakeBackend();
 void ProcessPlatformEvents(PumpBudget budget);
 
-}  // namespace webview_adapter::detail
+}  // namespace webview::detail

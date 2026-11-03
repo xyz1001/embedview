@@ -3,6 +3,8 @@
 首轮静态库实现以 Windows 和 Linux X11 为目标；尚未构建或运行验证，原生与 Qt 后端
 都需进一步验证。不支持 Wayland 和 macOS，没有测试，也不提供播放或性能保证。
 原生接口仅使用 C++17 标准类型；可选的 QWidget 封装依赖原生接口，反之则不依赖。
+原生和 Qt C++ 接口位于 `webview` 命名空间；CMake 导入目标
+仍使用 `webview_adapter::native` 和 `webview_adapter::qt`。
 接口不包含 dispatch、run、bridge 或业务 API。
 
 ## 线程与初始化

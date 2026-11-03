@@ -4,7 +4,7 @@
 #include <thread>
 #include <utility>
 
-namespace webview_adapter {
+namespace webview {
 using detail::State;
 
 namespace {
@@ -340,4 +340,4 @@ void ProcessEvents() {
     }
 }
 
-}  // namespace webview_adapter
+}  // namespace webview

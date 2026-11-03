@@ -16,7 +16,7 @@
 #include <optional>
 #include <utility>
 
-namespace webview_adapter::detail {
+namespace webview::detail {
 namespace {
 
 std::error_code Error(std::errc value) noexcept {
@@ -527,4 +527,4 @@ void ProcessPlatformEvents(PumpBudget budget) {
     }
 }
 
-}  // namespace webview_adapter::detail
+}  // namespace webview::detail
