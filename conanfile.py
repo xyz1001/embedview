@@ -1,6 +1,9 @@
+import os
+
 from conan import ConanFile
 from conan.errors import ConanInvalidConfiguration
 from conan.tools.cmake import CMake, CMakeDeps, CMakeToolchain, cmake_layout
+from conan.tools.files import copy
 
 
 class EmbedviewConan(ConanFile):
@@ -8,10 +11,11 @@ class EmbedviewConan(ConanFile):
     version = "0.1.2"
     package_type = "library"
     description = "C++ webview adapter library for window embedding"
+    license = "MIT"
     settings = "os", "compiler", "build_type", "arch"
     options = {"shared": [True, False], "fPIC": [True, False], "with_qt": [True, False]}
     default_options = {"shared": False, "fPIC": True, "with_qt": False}
-    exports_sources = "CMakeLists.txt", "src/*"
+    exports_sources = "CMakeLists.txt", "LICENSE", "src/*"
 
     def config_options(self):
         if self.settings.os == "Windows":
@@ -69,6 +73,8 @@ class EmbedviewConan(ConanFile):
 
     def package(self):
         CMake(self).install()
+        copy(self, "LICENSE", src=self.source_folder,
+             dst=os.path.join(self.package_folder, "licenses"))
 
     def package_info(self):
         self.cpp_info.set_property("cmake_file_name", "embedview")
