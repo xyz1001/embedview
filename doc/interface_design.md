@@ -1,11 +1,27 @@
 # WebView 适配器接口设计
 
-首轮静态库实现以 Windows 和 Linux X11 为目标；尚未构建或运行验证，原生与 Qt 后端
+首轮实现以 Windows 和 Linux X11 为目标；尚未构建或运行验证，原生与 Qt 后端
 都需进一步验证。不支持 Wayland 和 macOS，没有测试，也不提供播放或性能保证。
 原生接口仅使用 C++17 标准类型；可选的 QWidget 封装依赖原生接口，反之则不依赖。
 原生和 Qt C++ 接口位于 `webview` 命名空间；CMake 导入目标
 仍使用 `webview_adapter::native` 和 `webview_adapter::qt`。
 接口不包含 dispatch、run、bridge 或业务 API。
+
+## 构建与部署
+
+默认构建静态库；纯 CMake 设置 `BUILD_SHARED_LIBS=ON` 可选择共享库。
+Conan 2 的 `shared` 默认 `False`，可独立于默认关闭的 `with_qt` 选项启用：
+
+```sh
+conan install . -o "webview-adapter/*:shared=False" --build=missing
+conan install . -o "webview-adapter/*:shared=True" --build=missing
+```
+
+以上使用默认 profile；需要 Qt 时另加 `-o "webview-adapter/*:with_qt=True"`。
+纯 CMake 安装目标和 Conan CMakeDeps 组件目标会自动传递共享库消费端导入宏，
+无需调用方手动配置导出宏。原生和 Qt 共享库彼此独立，调用方与共享库应匹配
+编译器和 CRT。Windows 的导入库在 `lib`、DLL 在 `bin`，部署时需要提供 DLL；
+Linux 的 `.so` 在 `lib`，运行时需配置动态加载器搜索路径。Linux 共享构建尚未验证。
 
 ## 线程与初始化
 

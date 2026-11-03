@@ -1,5 +1,6 @@
 #pragma once
 
+#include <webview_adapter/export.h>
 #include <webview_adapter/native/webview.h>
 #include <QWidget>
 
@@ -24,7 +25,7 @@ namespace webview {
 // CloseBrowser 的拆包装、关闭原生层顺序。Win/X11
 // 的实际外来窗口行为仍待运行复核。 不支持 Wayland 和
 // macOS；不提供播放或性能保证。
-class WebViewWidget : public QWidget {
+class WEBVIEW_ADAPTER_QT_API WebViewWidget : public QWidget {
 public:
     explicit WebViewWidget(QWidget *parent = nullptr);
     ~WebViewWidget() override;

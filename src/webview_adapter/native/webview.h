@@ -1,5 +1,7 @@
 #pragma once
 
+#include <webview_adapter/export.h>
+
 #include <cstdint>
 #include <functional>
 #include <memory>
@@ -60,7 +62,7 @@ using NativeWindowHandle =
 // STA， Linux 上为 GTK 主 UI
 // 线程。不提供隐藏的工作线程或跨线程派发；应用须自行调度。
 // 构造既不初始化浏览器，也不处理消息。
-class WebView {
+class WEBVIEW_ADAPTER_NATIVE_API WebView {
 public:
     WebView();
     ~WebView();
@@ -101,6 +103,6 @@ private:
 // 线程级、非阻塞、非递归。迭代和软时间预算不是硬实时限制；也可能处理其他对象的事件。
 // 不提供独立的 run API；已有 Windows 消息循环无需额外的事件泵。
 // 调用方只能在相应 UI 线程上使用。
-void ProcessEvents();
+WEBVIEW_ADAPTER_NATIVE_API void ProcessEvents();
 
 }  // namespace webview

@@ -25,9 +25,17 @@ else()
     message(FATAL_ERROR "webview 包未提供受支持的已编译 C API 目标")
 endif()
 
-add_library(webview_adapter_native STATIC webview_adapter/native/webview.cpp)
+add_library(webview_adapter_native webview_adapter/native/webview.cpp)
 add_library(webview_adapter::native ALIAS webview_adapter_native)
 set_target_properties(webview_adapter_native PROPERTIES EXPORT_NAME native)
+if(BUILD_SHARED_LIBS)
+    set_target_properties(webview_adapter_native PROPERTIES CXX_VISIBILITY_PRESET hidden VISIBILITY_INLINES_HIDDEN ON)
+    target_compile_definitions(
+        webview_adapter_native
+        PUBLIC WEBVIEW_ADAPTER_NATIVE_DLL
+        PRIVATE WEBVIEW_ADAPTER_NATIVE_DLL_EXPORTS
+    )
+endif()
 target_compile_features(webview_adapter_native PUBLIC cxx_std_17)
 target_include_directories(
     webview_adapter_native PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
@@ -49,6 +57,12 @@ install(
     TARGETS webview_adapter_native
     EXPORT webview_adapterTargets
     ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+    LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+    RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
+)
+install(
+    FILES webview_adapter/export.h
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/webview_adapter"
 )
 install(
     FILES webview_adapter/native/webview.h
@@ -61,14 +75,24 @@ if(WEBVIEW_ADAPTER_WITH_QT)
         COMPONENTS Widgets
         REQUIRED
     )
-    add_library(webview_adapter_qt STATIC webview_adapter/qt/webview_widget.cpp)
+    add_library(webview_adapter_qt webview_adapter/qt/webview_widget.cpp)
     add_library(webview_adapter::qt ALIAS webview_adapter_qt)
     set_target_properties(webview_adapter_qt PROPERTIES EXPORT_NAME qt)
+    if(BUILD_SHARED_LIBS)
+        set_target_properties(webview_adapter_qt PROPERTIES CXX_VISIBILITY_PRESET hidden VISIBILITY_INLINES_HIDDEN ON)
+        target_compile_definitions(
+            webview_adapter_qt
+            PUBLIC WEBVIEW_ADAPTER_QT_DLL
+            PRIVATE WEBVIEW_ADAPTER_QT_DLL_EXPORTS
+        )
+    endif()
     target_link_libraries(webview_adapter_qt PUBLIC webview_adapter_native Qt5::Widgets)
     install(
         TARGETS webview_adapter_qt
         EXPORT webview_adapterTargets
         ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+        LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+        RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
     )
     install(FILES webview_adapter/qt/webview_widget.h DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/webview_adapter/qt")
 endif()

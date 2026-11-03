@@ -3,9 +3,6 @@ project(webview_adapter LANGUAGES CXX)
 
 include(GNUInstallDirs)
 
-if(BUILD_SHARED_LIBS)
-    message(FATAL_ERROR "目前仅支持静态库，不支持 BUILD_SHARED_LIBS=ON")
-endif()
 if(NOT WIN32 AND NOT CMAKE_SYSTEM_NAME STREQUAL "Linux")
     message(FATAL_ERROR "webview-adapter 仅支持 Windows 和 Linux")
 endif()
@@ -17,6 +14,7 @@ if(MSVC)
     add_compile_options(/utf-8)
 endif()
 
+option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 option(WEBVIEW_ADAPTER_WITH_QT "构建 Qt 封装" OFF)
 
 add_subdirectory(src)

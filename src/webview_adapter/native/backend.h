@@ -20,8 +20,10 @@ struct PumpBudget {
 
 class WebViewAccess {
 public:
-    static std::error_code SynchronizeBounds(WebView &webview);
-    static bool IsClosed(const WebView &webview) noexcept;
+    static WEBVIEW_ADAPTER_NATIVE_API std::error_code SynchronizeBounds(
+            WebView &webview);
+    static WEBVIEW_ADAPTER_NATIVE_API bool IsClosed(
+            const WebView &webview) noexcept;
 };
 
 struct BackendEvents {

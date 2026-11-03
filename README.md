@@ -21,12 +21,24 @@ Qt 目标并安装其头文件，此时需要 Qt5 Widgets；该选项默认关�
 `find_package(webview_adapter CONFIG REQUIRED)` 加载。不启用 Qt 时，不安装 Qt
 头文件和目标，安装后的 CMake 包也不会查找 Qt。
 
-首版仅支持静态库，`BUILD_SHARED_LIBS=ON` 会被拒绝。Conan 2 配方使用默认关闭的
-`with_qt` 选项；启用时使用 `qt/5.15.18`，并传递 Qt Widgets 组件依赖。其 CMakeDeps
-包名为 `webview-adapter`，版本为 `0.1.2`。Conan 和 CMake 选项分别用于各自的
-工作流程；配方通过 CMake 构建和安装。
-CMake 导入目标命名空间仍为 `webview_adapter`，目标为
-`webview_adapter::native` 和可选的 `webview_adapter::qt`。
+默认构建静态库；纯 CMake 可设置 `BUILD_SHARED_LIBS=ON` 构建共享库。Conan 2 配方的
+`shared` 默认 `False`，`with_qt` 独立且默认 `False`；启用 Qt 时使用 `qt/5.15.18`，
+并传递 Qt Widgets 组件依赖。例如，使用默认 profile 在项目目录执行：
+
+```sh
+conan install . -o "webview-adapter/*:shared=False" --build=missing
+conan install . -o "webview-adapter/*:shared=True" --build=missing
+```
+
+如需 Qt，另加 `-o "webview-adapter/*:with_qt=True"`。Conan CMakeDeps 包名为
+`webview-adapter`，版本为 `0.1.2`；配方通过 CMake 构建和安装。纯 CMake 安装包及
+Conan CMakeDeps 的导入目标均为 `webview_adapter::native` 和可选的
+`webview_adapter::qt`，共享库的消费端导入宏由目标自动传递，无需手动配置导出宏。
+这与 C++ 接口使用的 `webview` 命名空间不同。
+
+共享构建中原生库和 Qt 库各自独立；Windows 下分别生成 DLL 和 `lib` 导入库，部署时
+需要提供 DLL（Conan 包的 `bin` 目录）。Linux 共享库位于 `lib`，运行时需确保动态
+加载器可找到 `.so`。调用方与共享库需要匹配的编译器和 CRT；Linux 共享构建尚未验证。
 
 原生后端使用 `webview/0.12.0`；公共接口不暴露 webview 类型。Linux 还需要 GTK 和
 WebKitGTK；系统 WebKitGTK 版本未锁定，由 pkg-config 实际解析结果决定。不启用 Qt 时，

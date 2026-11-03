@@ -6,12 +6,20 @@ from conan.tools.cmake import CMake, CMakeDeps, CMakeToolchain, cmake_layout
 class WebviewAdapterConan(ConanFile):
     name = "webview-adapter"
     version = "0.1.2"
-    package_type = "static-library"
+    package_type = "library"
     description = "C++ webview adapter"
     settings = "os", "compiler", "build_type", "arch"
-    options = {"with_qt": [True, False]}
-    default_options = {"with_qt": False}
+    options = {"shared": [True, False], "fPIC": [True, False], "with_qt": [True, False]}
+    default_options = {"shared": False, "fPIC": True, "with_qt": False}
     exports_sources = "CMakeLists.txt", "src/*"
+
+    def config_options(self):
+        if self.settings.os == "Windows":
+            self.options.rm_safe("fPIC")
+
+    def configure(self):
+        if self.options.shared:
+            self.options.rm_safe("fPIC")
 
     def validate(self):
         if self.settings.os not in ("Windows", "Linux"):
@@ -45,7 +53,7 @@ class WebviewAdapterConan(ConanFile):
 
     def generate(self):
         tc = CMakeToolchain(self)
-        tc.variables["BUILD_SHARED_LIBS"] = False
+        tc.variables["BUILD_SHARED_LIBS"] = bool(self.options.shared)
         tc.variables["WEBVIEW_ADAPTER_WITH_QT"] = self.options.with_qt
         # 仅在 Conan 组件确实声明了库时，允许 CMakeDeps 的 core 接口包装目标。
         tc.variables["WEBVIEW_ADAPTER_CONAN_CORE_HAS_LIBRARY"] = (
@@ -67,6 +75,8 @@ class WebviewAdapterConan(ConanFile):
         native = self.cpp_info.components["native"]
         native.set_property("cmake_target_name", "webview_adapter::native")
         native.libs = ["webview_adapter_native"]
+        if self.options.shared:
+            native.defines = ["WEBVIEW_ADAPTER_NATIVE_DLL"]
         # 与生成阶段检查的实际组件保持一致，传递静态库所需的链接依赖。
         native.requires = [f"webview::{self._webview_component()}"]
         if self.settings.os == "Windows":
@@ -84,4 +94,6 @@ class WebviewAdapterConan(ConanFile):
             qt = self.cpp_info.components["qt"]
             qt.set_property("cmake_target_name", "webview_adapter::qt")
             qt.libs = ["webview_adapter_qt"]
+            if self.options.shared:
+                qt.defines = ["WEBVIEW_ADAPTER_QT_DLL"]
             qt.requires = ["native", "qt::qtWidgets"]
