@@ -21,7 +21,7 @@
   - **加载通知**：精准感知页面引擎加载完成与异常状态。
   - **媒体与环境**：支持 User-Agent 自定义、上下文菜单开关、无手势自动播放配置。
 - **完备的生命周期与安全防护**：
-  - 异步就绪模型与幂等安全的 `Close()` 释放。
+  - 初始化返回前完成就绪通知，以及幂等安全的 `Close()` 释放。
   - 针对 Linux 嵌入场景内置有界 GLib 事件泵，防止主循环卡死与递归重入。
 
 ---
@@ -157,13 +157,20 @@ void CreateEmbeddedWebview() {
 
 | 方法 | `WebView` (原生) | `WebViewWidget` (Qt) | 说明 |
 | :--- | :--- | :--- | :--- |
-| `Initialize(options, callbacks)` | 支持 | 支持 | 异步开启初始化流程。 |
+| `Initialize(options, callbacks)` | 支持 | 支持 | 接受后在返回前通知初始化结果；拒绝时返回错误且不通知。 |
 | `Navigate(url)` | 支持 | 支持 | 加载目标 URL（需在就绪后调用）。 |
 | `IsReady()` | 支持 | 支持 | 查询底层引擎是否已就绪。 |
 | `Resize(width, height)` | 支持 | 自动同步 | 调整渲染区域大小（原生像素单位）。Qt 控件自动处理。 |
 | `SetVisible(bool)` | 支持 | 自动同步 | 设置显示/隐藏。Qt 控件由 `show()` / `hide()` 驱动。 |
 | `Close() / CloseBrowser()` | `Close()` | `CloseBrowser()` | 主动关闭并释放浏览器内核资源。 |
 | `GetNativeWindow()` | 支持 | 封装于内部 | 获取 `NativeWindowHandle` 变体类型。 |
+
+`Initialize` 返回零只表示请求被接受；即使初始化失败也返回零并通过
+`initialized(error)` 报告。除初始化期间关闭或析构撤销外，回调在返回前恰好
+执行一次，可能重入，返回后不会补发。成功表示原生配置及 Qt 包装（如适用）
+完成，不等待页面加载、媒体或协议就绪，也不会额外启动浏览器或等待网页。
+初始化期间可能处理消息；Windows 上游创建阶段的内部消息泵可能消费 `WM_QUIT`，
+且该阶段不能立即中断。
 
 ---
 

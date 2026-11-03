@@ -355,7 +355,7 @@ std::error_code WebViewWidget::Initialize(Options options,
     // 在 Initialize 前启动共享泵；即使控件在其中被删，原生清理仍有事件循环。
     RetainUntilClosed(shared->native);
 #endif
-    Impl::Shared::Operation operation(shared);
+    // 不跨原生同步初始化持有 Operation：重入关闭必须能立即通知原生层。
     std::weak_ptr<Impl::Shared> weak = shared;
     Callbacks native_callbacks;
     native_callbacks.initialized = [weak](std::error_code error) {

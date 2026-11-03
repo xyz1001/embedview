@@ -16,10 +16,11 @@ class QShowEvent;
 namespace embedview {
 
 // 构造不初始化浏览器，也不处理消息。原生接口的创建线程、
-// 回调和析构规则同样适用于此；initialized 表示原生初始化与 Qt 封装均已成功。
-// 不暴露可变的原生对象。Linux Qt 嵌入仅限 xcb/X11，且仍需要 GTK。共享的有界
-// GLib 事件泵必须从原生初始化之前持续运行到清理安全完成；不得使用无界 pending
-// 循环， 也不得通过全局环境变量静默更改平台后端。
+// 回调和析构规则同样适用于此；initialized 的成功表示原生初始化与 Qt
+// 封装均已完成。 不暴露可变的原生对象。Linux Qt 嵌入仅限 xcb/X11，且仍需要
+// GTK。共享的有界 GLib
+// 事件泵必须从原生初始化之前持续运行到清理安全完成；不得使用无界 pending 循环，
+// 也不得通过全局环境变量静默更改平台后端。
 // 容器与原生对象的所有权和销毁顺序需要在后端验证；不承诺未经验证的分离方法。
 // 原生用户关闭请求先经 close_requested 转发；用户有处理器时可忽略请求，否则走
 // CloseBrowser 的拆包装、关闭原生层顺序。Win/X11
@@ -35,6 +36,8 @@ public:
     WebViewWidget(WebViewWidget &&) = delete;
     WebViewWidget &operator=(WebViewWidget &&) = delete;
 
+    // 返回错误表示拒绝且不调用 initialized；接受后除关闭或析构取消外，
+    // initialized 在返回前恰好调用一次，报告原生初始化或 Qt 封装的实际结果。
     [[nodiscard]] std::error_code Initialize(Options options,
                                              Callbacks callbacks);
     [[nodiscard]] std::error_code Navigate(std::string url);

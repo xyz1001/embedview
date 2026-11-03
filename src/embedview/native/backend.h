@@ -35,6 +35,7 @@ struct BackendEvents {
 
 // 工厂只分配对象，不调用平台接口；共享层先持有后端，再调用 BeginInitialize。
 // BeginInitialize 首行须通过 shared_from_this 保活；事件仅弱引用共享状态。
+// 返回前必须完成 initialized，或因关闭而取消，返回后不得补发。
 // RequestClose 立即取消事件，completed 恰好一次，须在资源安全清理后通知，
 // 可以同步或延迟；关闭后除 completed 外不得再发事件。平台创建和回调必须有
 // 深度保护；使用独立消息或 GLib idle 延迟清理，直到保护深度为零。

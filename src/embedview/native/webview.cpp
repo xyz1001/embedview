@@ -100,7 +100,7 @@ detail::BackendEvents MakeEvents(const std::shared_ptr<SharedState> &state) {
         Activity activity(state);
         state->state = result ? State::kFailed : State::kReady;
         try {
-            auto callback = state->callbacks.initialized;
+            auto callback = std::move(state->callbacks.initialized);
             if (callback) {
                 callback(result);
             }

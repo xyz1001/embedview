@@ -71,9 +71,10 @@ public:
     WebView(WebView &&) = delete;
     WebView &operator=(WebView &&) = delete;
 
-    // 成功返回表示已接受，而非已完成。完成可能同步、重入或异步发生；
-    // 一旦接受，除非先关闭，否则恰好完成一次。就绪要求确认脚本已注册、
-    // UA 和菜单已配置且句柄已就绪，而不仅是提交脚本注册请求。
+    // 返回错误表示拒绝，不调用 initialized；返回零表示接受，初始化失败也
+    // 通过 initialized 报告。除非先关闭或析构，回调在返回前恰好执行一次，
+    // 可能重入；返回后不会补发。就绪要求脚本已注册、UA 和菜单
+    // 已配置且句柄已就绪，不等待页面加载、媒体或协议就绪。
     // 不支持重新初始化。通用错误使用 std::errc；平台错误保留原有类别。
     [[nodiscard]] std::error_code Initialize(Options options,
                                              Callbacks callbacks);
@@ -85,7 +86,7 @@ public:
     bool IsReady() const noexcept;
     NativeWindowHandle GetNativeWindow() const noexcept;
 
-    // 幂等，包括在初始化期间或回调中调用。逻辑关闭立几天使句柄失效，
+    // 幂等，包括在初始化期间或回调中调用。逻辑关闭立即使句柄失效，
     // 并撤销尚未开始的回调；正在执行的回调可以返回。closed 在清理安全完成后
     // 发送一次，但不一定等待浏览器进程退出。关闭会取消初始化，且不补发
     // initialized。异步清理需要事件循环。析构不调用用户回调。如果初始化

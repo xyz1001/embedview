@@ -647,19 +647,28 @@ public:
                         }
                         Guard guard(self);
                         try {
-                            if (self->closing_) {
-                                return S_OK;
-                            }
-                            if (FAILED(result)) {
-                                self->FinishInit(HrError(result));
-                            } else if (!id || !*id) {
-                                self->FinishInit(HrError(E_FAIL));
-                            } else {
+                            if (SUCCEEDED(result) && id && *id &&
+                                !self->cleaned_) {
                                 self->script_id_ = id;
-                                self->FinishInit({});
+                            }
+                            if (!self->closing_ && !self->init_finished_ &&
+                                !self->script_completed_) {
+                                self->script_result_ =
+                                        SUCCEEDED(result) && (!id || !*id)
+                                                ? E_FAIL
+                                                : result;
+                                self->script_completed_ = true;
                             }
                         } catch (...) {
-                            self->FinishInit(HrError(E_OUTOFMEMORY));
+                            if (!self->closing_ && !self->init_finished_ &&
+                                !self->script_completed_) {
+                                self->script_result_ = E_OUTOFMEMORY;
+                                self->script_completed_ = true;
+                            }
+                        }
+                        // GetMessageW 处理发送消息时可能直接调用此处理器。
+                        if (self->script_completed_ && self->dispatcher_) {
+                            PostMessageW(self->dispatcher_, WM_NULL, 0, 0);
                         }
                         return S_OK;
                     });
@@ -671,6 +680,28 @@ public:
                                                             handler.Get());
             if (FAILED(hr)) {
                 FinishInit(HrError(hr));
+                return;
+            }
+            while (!script_completed_ && !closing_) {
+                MSG msg{};
+                const BOOL result = GetMessageW(&msg, nullptr, 0, 0);
+                if (result == 0) {
+                    PostQuitMessage(static_cast<int>(msg.wParam));
+                    FinishInit(std::make_error_code(
+                            std::errc::operation_canceled));
+                    return;
+                }
+                if (result == -1) {
+                    auto error = WinError();
+                    FinishInit(error);
+                    return;
+                }
+                TranslateMessage(&msg);
+                DispatchMessageW(&msg);
+            }
+            if (!closing_) {
+                FinishInit(FAILED(script_result_) ? HrError(script_result_)
+                                                  : std::error_code{});
             }
         } catch (...) {
             FinishInit(std::make_error_code(std::errc::not_enough_memory));
@@ -731,6 +762,10 @@ public:
         closing_ = true;
         events_ = {};
         completed_ = std::move(completed);
+        // GetMessageW 可能在处理跨线程发送消息时重入关闭，唤醒等待。
+        if (dispatcher_ && depth_ > 1) {
+            PostMessageW(dispatcher_, WM_NULL, 0, 0);
+        }
     }
 
 private:
@@ -745,6 +780,8 @@ private:
          new_registered_ = false, close_registered_ = false;
     bool com_initialized_ = false, init_finished_ = false, closing_ = false,
          cleaned_ = false, queued_ = false;
+    bool script_completed_ = false;
+    HRESULT script_result_ = E_FAIL;
     int depth_ = 0;
     BackendEvents events_;
     std::function<void()> completed_;
