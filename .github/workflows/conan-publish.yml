@@ -1,0 +1,62 @@
+name: Conan Package Build and Publish
+
+on:
+  push:
+    branches: [ "main" ]
+    tags: [ "v*" ]
+  workflow_dispatch:
+    inputs:
+      upload:
+        description: "Upload package to GitLab Conan remote"
+        type: boolean
+        default: true
+
+jobs:
+  conan-publish:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Conan
+        run: |
+          pip install conan
+          conan --version
+
+      - name: Detect Conan Profile
+        run: |
+          conan profile detect --force
+
+      - name: Configure Linux Package Manager
+        if: runner.os == 'Linux'
+        run: |
+          echo "tools.system.package_manager:mode = install" >> ~/.conan2/global.conf
+          echo "tools.system.package_manager:sudo = True" >> ~/.conan2/global.conf
+
+      - name: Add GitLab Remote & Authenticate
+        env:
+          PROJECT_ID: ${{ secrets.GITLAB_PROJECT_ID }}
+          USERNAME: ${{ secrets.GITLAB_USERNAME }}
+          TOKEN: ${{ secrets.GITLAB_TOKEN }}
+        run: |
+          conan remote add gitlab https://gitlab.com/api/v4/projects/${{ env.PROJECT_ID }}/packages/conan
+          conan remote login gitlab ${{ env.USERNAME }} -p ${{ env.TOKEN }}
+
+      - name: Build Conan Package
+        run: |
+          conan create . --build=missing
+
+      - name: Upload to GitLab Remote
+        if: github.event_name != 'pull_request' && (github.event_name != 'workflow_dispatch' || inputs.upload == true)
+        run: |
+          conan upload "webview-adapter/*" -r gitlab --confirm
