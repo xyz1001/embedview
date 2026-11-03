@@ -54,9 +54,9 @@ jobs:
 
       - name: Build Conan Package
         run: |
-          conan create . --build=missing
+          conan create . --user=xyz1001 --channel=stable --build=missing
 
       - name: Upload to GitLab Remote
         if: github.event_name != 'pull_request' && (github.event_name != 'workflow_dispatch' || inputs.upload == true)
         run: |
-          conan upload "embedview/*" -r gitlab --confirm
+          conan upload "embedview/*@xyz1001/stable" -r gitlab --confirm

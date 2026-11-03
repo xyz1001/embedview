@@ -190,7 +190,7 @@ conan remote add xyz1001-conan https://gitlab.com/api/v4/projects/88391881/packa
 ```python
 def requirements(self):
     # 引入 embedview
-    self.requires("embedview/0.1.3")
+    self.requires("embedview/0.1.3@xyz1001/stable")
 
 def configure(self):
     # 如需启用 Qt 封装（默认关闭）
