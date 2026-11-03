@@ -23,6 +23,8 @@ struct Options {
     std::optional<std::string> user_agent;
     // 仅控制浏览器的默认上下文菜单。
     bool context_menu_enabled = true;
+    // 尽量允许无用户手势播放；默认不主动放宽平台限制。
+    bool allow_autoplay = false;
 };
 
 struct Callbacks {

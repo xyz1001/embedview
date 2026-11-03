@@ -37,6 +37,54 @@ std::error_code WinError() {
              : std::make_error_code(std::errc::io_error);
 }
 
+class ScopedAutoplayArguments {
+public:
+    std::error_code Apply() {
+        SetLastError(ERROR_SUCCESS);
+        DWORD size = GetEnvironmentVariableW(kName, nullptr, 0);
+        if (!size) {
+            DWORD error = GetLastError();
+            if (error != ERROR_SUCCESS && error != ERROR_ENVVAR_NOT_FOUND) {
+                return WinError();
+            }
+            existed_ = error != ERROR_ENVVAR_NOT_FOUND;
+        } else {
+            existed_ = true;
+            original_.resize(size);
+            DWORD length =
+                    GetEnvironmentVariableW(kName, original_.data(), size);
+            if (!length || length >= size) {
+                return WinError();
+            }
+            original_.resize(length);
+        }
+        if (original_.find(L"--autoplay-policy=") != std::wstring::npos) {
+            return {};
+        }
+        auto arguments =
+                original_ + L" --autoplay-policy=no-user-gesture-required";
+        if (!SetEnvironmentVariableW(kName, arguments.c_str())) {
+            return WinError();
+        }
+        changed_ = true;
+        return {};
+    }
+
+    ~ScopedAutoplayArguments() {
+        if (changed_) {
+            SetEnvironmentVariableW(kName,
+                                    existed_ ? original_.c_str() : nullptr);
+        }
+    }
+
+private:
+    static constexpr const wchar_t *kName =
+            L"WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS";
+    std::wstring original_;
+    bool existed_ = false;
+    bool changed_ = false;
+};
+
 class WebErrorCategory final : public std::error_category {
 public:
     const char *name() const noexcept override {
@@ -501,7 +549,17 @@ public:
                 FinishInit(WinError());
                 return;
             }
-            view_ = webview_create(0, host_);
+            {
+                // WebView2 创建环境时读取进程变量；仅在调用期间临时追加。
+                ScopedAutoplayArguments arguments;
+                if (options.allow_autoplay) {
+                    if (auto ec = arguments.Apply()) {
+                        FinishInit(ec);
+                        return;
+                    }
+                }
+                view_ = webview_create(0, host_);
+            }
             if (closing_) {
                 return;
             }

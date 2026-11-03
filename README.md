@@ -23,7 +23,7 @@ Qt 目标并安装其头文件，此时需要 Qt5 Widgets；该选项默认关�
 
 首版仅支持静态库，`BUILD_SHARED_LIBS=ON` 会被拒绝。Conan 2 配方使用默认关闭的
 `with_qt` 选项；启用时使用 `qt/5.15.18`，并传递 Qt Widgets 组件依赖。其 CMakeDeps
-包名为 `webview-adapter`，初始版本为 `0.1.0`。Conan 和 CMake 选项分别用于各自的
+包名为 `webview-adapter`，版本为 `0.1.2`。Conan 和 CMake 选项分别用于各自的
 工作流程；配方通过 CMake 构建和安装。
 
 原生后端使用 `webview/0.12.0`；公共接口不暴露 webview 类型。Linux 还需要 GTK 和
@@ -32,8 +32,13 @@ WebKitGTK；系统 WebKitGTK 版本未锁定，由 pkg-config 实际解析结果
 
 导航回调在 Windows 上仅覆盖顶层导航，在 Linux 上覆盖顶层及子框架导航。上游
 webview 0.12.0 的 `apply_webkit_dmabuf_workaround` 在特定 Linux X11 NVIDIA 场景下会
-设置进程级环境变量 `WEBKIT_DISABLE_DMABUF_RENDERER=1`。本库不新增环境变量配置，
-也不会偷偷切换 `GDK_BACKEND`。
+设置进程级环境变量 `WEBKIT_DISABLE_DMABUF_RENDERER=1`。本库不会偷偷切换 `GDK_BACKEND`。
+
+设置 `options.allow_autoplay = true` 可尽量允许无用户手势播放；默认 `false` 不主动
+放宽平台限制，但不保证阻止静音媒体或调用方环境允许的自动播放。启用时 Windows 在创建 WebView2 时临时设置进程级
+`WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS`，调用返回后恢复；已有的 `--autoplay-policy=`
+无论宽严均保持不变。这是进程级行为，不保证实例隔离。Linux 显式取消媒体播放手势
+要求，关闭时则明确要求手势。网站策略、媒体解码或 DRM 仍可能阻止实际播放。
 
 `initialized` 的零错误码表示初始化成功，但不表示页面加载或协议就绪。
 `load_finished` 接收错误码和 URL：零表示成功，失败保留原错误码，取消可能报告

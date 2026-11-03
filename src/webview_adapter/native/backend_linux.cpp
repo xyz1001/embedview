@@ -215,6 +215,8 @@ private:
             webkit_settings_set_user_agent(settings,
                                            options.user_agent->c_str());
         }
+        webkit_settings_set_media_playback_requires_user_gesture(
+                settings, options.allow_autoplay ? FALSE : TRUE);
         if (closing_) {
             return Error(std::errc::operation_canceled);
         }

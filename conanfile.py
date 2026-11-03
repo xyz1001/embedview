@@ -5,7 +5,7 @@ from conan.tools.cmake import CMake, CMakeDeps, CMakeToolchain, cmake_layout
 
 class WebviewAdapterConan(ConanFile):
     name = "webview-adapter"
-    version = "0.1.0"
+    version = "0.1.2"
     package_type = "static-library"
     description = "C++ webview adapter"
     settings = "os", "compiler", "build_type", "arch"

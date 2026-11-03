@@ -28,6 +28,12 @@ document-start 脚本已注册、user-agent 和菜单配置已完成，且原生
 要求的实现不得静默忽略。可选 user agent 不保证 User-Agent Client Hints 相应变化。
 上下文菜单选项仅控制浏览器的默认上下文菜单。
 
+设置 `options.allow_autoplay = true` 可尽量允许无用户手势播放；默认 `false` 不主动
+放宽平台限制，但不保证阻止静音媒体或调用方环境允许的自动播放。启用时 Windows 仅在创建 WebView2 期间临时设置进程级
+`WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS` 并在调用返回后恢复；已有的
+`--autoplay-policy=` 无论宽严均保持不变。该设置不是实例级保证。Linux 显式取消媒体
+播放手势要求，关闭时则明确要求手势。网站策略、媒体解码或 DRM 仍可能阻止实际播放。
+
 `navigation_requested` 在 Windows 上仅涉及顶层导航，在 Linux 上覆盖顶层及子框架
 导航（沿用旧实现），不是通用网络拦截。回调必须快速、同步、
 不抛出异常，且不得进入模态循环或以其他方式引发模态重入。Linux 的新窗口导航经此
@@ -78,5 +84,4 @@ Qt 封装负责拦截并处理该请求。
 
 Linux 系统 WebKitGTK 的版本未锁定，由 pkg-config 的实际解析结果决定。上游 webview
 0.12.0 的 `apply_webkit_dmabuf_workaround` 在特定 Linux X11 NVIDIA 场景下会设置
-进程级环境变量 `WEBKIT_DISABLE_DMABUF_RENDERER=1`。本库不新增环境变量配置，也不会
-偷偷切换 `GDK_BACKEND`。
+进程级环境变量 `WEBKIT_DISABLE_DMABUF_RENDERER=1`。本库不会偷偷切换 `GDK_BACKEND`。
