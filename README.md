@@ -190,7 +190,7 @@ conan remote add xyz1001-conan https://gitlab.com/api/v4/projects/88391881/packa
 ```python
 def requirements(self):
     # 引入 embedview
-    self.requires("embedview/0.1.2")
+    self.requires("embedview/0.1.3")
 
 def configure(self):
     # 如需启用 Qt 封装（默认关闭）
@@ -200,6 +200,9 @@ def configure(self):
 配置选项：
 - `shared`: `True` / `False`（默认 `False`，静态库）
 - `with_qt`: `True` / `False`（默认 `False`，开启后构建 `embedview::qt` 并依赖 Qt 5.15）
+
+`Options` 布局和初始化完成契约已变化，消费者需使用 0.1.3 头文件和库重新编译；
+SDK 的 `IWebpageWindow::Open` 公共同步 ABI 无需改变。
 
 命令行安装示例：
 

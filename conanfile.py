@@ -8,7 +8,7 @@ from conan.tools.files import copy
 
 class EmbedviewConan(ConanFile):
     name = "embedview"
-    version = "0.1.2"
+    version = "0.1.3"
     package_type = "library"
     description = "C++ webview adapter library for window embedding"
     license = "MIT"

@@ -43,6 +43,9 @@ document-start 脚本已注册、user-agent、菜单和可选背景色配置已�
 消息泵可能消费 `WM_QUIT`，且创建期间不能立即中断；本库在创建期间保护状态，返回后
 检查关闭。脚本注册等待期间收到 `WM_QUIT` 时保留并重投退出码，报告初始化取消。
 
+`Options` 布局与初始化完成契约已变化，消费者必须使用 0.1.3 头文件和库重新编译；
+SDK 的 `IWebpageWindow::Open` 公共同步 ABI 不变。
+
 ## 配置、导航与加载
 
 `document_start_script` 在新顶层文档和子框架文档的 document-start 阶段注册到页面
