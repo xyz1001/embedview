@@ -617,6 +617,23 @@ public:
                     return;
                 }
             }
+            if (options.background_color) {
+                ComPtr<ICoreWebView2Controller2> controller2;
+                hr = controller_.As(&controller2);
+                if (FAILED(hr)) {
+                    FinishInit(HrError(hr));
+                    return;
+                }
+                const auto rgb = *options.background_color;
+                COREWEBVIEW2_COLOR color{255, static_cast<BYTE>(rgb >> 16),
+                                         static_cast<BYTE>(rgb >> 8),
+                                         static_cast<BYTE>(rgb)};
+                hr = controller2->put_DefaultBackgroundColor(color);
+                if (FAILED(hr)) {
+                    FinishInit(HrError(hr));
+                    return;
+                }
+            }
             if (auto ec = InstallEvents()) {
                 FinishInit(ec);
                 return;

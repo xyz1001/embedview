@@ -26,6 +26,8 @@ struct Options {
     bool context_menu_enabled = true;
     // 尽量允许无用户手势播放；默认不主动放宽平台限制。
     bool allow_autoplay = false;
+    // 可选的不透明背景色，格式为 0xRRGGBB；默认不覆盖平台默认值。
+    std::optional<std::uint32_t> background_color;
 };
 
 struct Callbacks {
@@ -73,7 +75,7 @@ public:
 
     // 返回错误表示拒绝，不调用 initialized；返回零表示接受，初始化失败也
     // 通过 initialized 报告。除非先关闭或析构，回调在返回前恰好执行一次，
-    // 可能重入；返回后不会补发。就绪要求脚本已注册、UA 和菜单
+    // 可能重入；返回后不会补发。就绪要求脚本已注册、UA、菜单和可选背景色
     // 已配置且句柄已就绪，不等待页面加载、媒体或协议就绪。
     // 不支持重新初始化。通用错误使用 std::errc；平台错误保留原有类别。
     [[nodiscard]] std::error_code Initialize(Options options,

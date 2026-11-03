@@ -206,6 +206,17 @@ private:
         if (!browser_) {
             return Error(std::errc::not_supported);
         }
+        if (options.background_color) {
+            const auto color = *options.background_color;
+            const GdkRGBA rgba{
+                    static_cast<double>((color >> 16) & 0xff) / 255.0,
+                    static_cast<double>((color >> 8) & 0xff) / 255.0,
+                    static_cast<double>(color & 0xff) / 255.0, 1.0};
+            webkit_web_view_set_background_color(browser_, &rgba);
+            if (closing_) {
+                return Error(std::errc::operation_canceled);
+            }
+        }
         manager_ = webkit_web_view_get_user_content_manager(browser_);
         auto *settings = webkit_web_view_get_settings(browser_);
         if (!manager_ || !settings) {

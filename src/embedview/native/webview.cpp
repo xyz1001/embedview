@@ -213,6 +213,9 @@ std::error_code WebView::Initialize(Options options, Callbacks callbacks) {
     if (state->state != State::kIdle) {
         return Error(std::errc::operation_not_permitted);
     }
+    if (options.background_color && (*options.background_color & 0xff000000u)) {
+        return Error(std::errc::invalid_argument);
+    }
     std::shared_ptr<detail::Backend> backend;
     detail::BackendEvents events;
     std::function<void()> cleanup_completed;

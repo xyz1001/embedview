@@ -35,7 +35,7 @@ Linux 要求 GTK 主 UI 线程。所有操作、查询、回调和析构都必�
 `Initialize` 返回错误表示请求被拒绝，不调用 `initialized`；返回零表示请求已接受，
 即使初始化失败也返回零，并通过 `initialized(error)` 报告。除关闭或析构撤销外，
 完成回调在 `Initialize` 返回前恰好执行一次，可能重入，返回后不得补发。就绪前必须确认
-document-start 脚本已注册、user-agent 和菜单配置已完成，且原生句柄已就绪；仅提交
+document-start 脚本已注册、user-agent、菜单和可选背景色配置已完成，且原生句柄已就绪；仅提交
 脚本注册请求并不足够。不支持重复初始化；就绪前导航会失败。通用错误通过
 `std::error_code` 使用 `std::errc`，平台错误保留原有类别。不定义额外的错误枚举。
 `initialized` 的零错误码表示原生初始化以及 Qt 包装（如适用）成功，不等待页面加载、
@@ -49,6 +49,11 @@ document-start 脚本已注册、user-agent 和菜单配置已完成，且原生
 主世界。不包括 Worker 和已有文档，也不保证特殊 URL 的行为一致。无法满足脚本注册
 要求的实现不得静默忽略。可选 user agent 不保证 User-Agent Client Hints 相应变化。
 上下文菜单选项仅控制浏览器的默认上下文菜单。
+
+`background_color` 是可选的 `std::uint32_t`，默认 `std::nullopt`，不覆盖平台
+默认背景；指定时使用不透明的 `0xRRGGBB`，高 8 位非零会在接受前以
+`std::errc::invalid_argument` 拒绝且不调用回调。Windows 使用 WebView2 控制器背景色，
+Linux 使用 WebKitGTK 背景色，不通过 CSS 注入。
 
 设置 `options.allow_autoplay = true` 可尽量允许无用户手势播放；默认 `false` 不主动
 放宽平台限制，但不保证阻止静音媒体或调用方环境允许的自动播放。启用时 Windows 仅在创建 WebView2 期间临时设置进程级

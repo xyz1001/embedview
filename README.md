@@ -142,6 +142,7 @@ void CreateEmbeddedWebview() {
 | `user_agent` | `std::optional<std::string>` | `std::nullopt` | 自定义 User-Agent 字符串。 |
 | `context_menu_enabled` | `bool` | `true` | 是否启用浏览器默认右键上下文菜单。 |
 | `allow_autoplay` | `bool` | `false` | 是否放宽音视频无手势自动播放限制。 |
+| `background_color` | `std::optional<std::uint32_t>` | `std::nullopt` | 不透明 `0xRRGGBB` 背景色；默认保留平台默认值，高 8 位必须为零。 |
 
 ### `embedview::Callbacks` 事件回调
 
