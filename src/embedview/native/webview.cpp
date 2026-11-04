@@ -265,6 +265,13 @@ std::error_code WebView::Navigate(std::string url) {
     });
 }
 
+std::error_code WebView::SetMuted(bool muted) {
+    auto state = impl_->state;
+    return ReadyCall(state, [muted](detail::Backend &backend) {
+        return backend.SetMuted(muted);
+    });
+}
+
 std::error_code WebView::SetVisible(bool visible) {
     auto state = impl_->state;
     return ReadyCall(state, [visible](detail::Backend &backend) {

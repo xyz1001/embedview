@@ -9,6 +9,10 @@
 #include <gtk/gtk.h>
 #include <webkit2/webkit2.h>
 
+#if !WEBKIT_CHECK_VERSION(2, 30, 0)
+#error "embedview requires WebKitGTK 2.30 or later"
+#endif
+
 #include <chrono>
 #include <exception>
 #include <map>
@@ -109,6 +113,13 @@ public:
         }
         return WEBVIEW_FAILED(result) ? Error(std::errc::io_error)
                                       : std::error_code{};
+    }
+
+    std::error_code SetMuted(bool muted) override {
+        Guard guard(shared_from_this());
+        webkit_web_view_set_is_muted(browser_, muted);
+        return closing_ ? Error(std::errc::operation_canceled)
+                        : std::error_code{};
     }
 
     std::error_code SetVisible(bool visible) override {

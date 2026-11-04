@@ -411,6 +411,15 @@ std::error_code WebViewWidget::Navigate(std::string url) {
     return shared->native->Navigate(std::move(url));
 }
 
+std::error_code WebViewWidget::SetMuted(bool muted) {
+    auto shared = impl_->shared;
+    if (!shared->Active() || shared->status != detail::State::kReady) {
+        return Error(std::errc::operation_not_permitted);
+    }
+    Impl::Shared::Operation operation(shared);
+    return shared->native->SetMuted(muted);
+}
+
 bool WebViewWidget::IsReady() const noexcept {
     return impl_->shared->status == detail::State::kReady;
 }

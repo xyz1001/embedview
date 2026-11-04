@@ -733,6 +733,16 @@ public:
         HRESULT hr = core_->Navigate(wide.c_str());
         return FAILED(hr) ? HrError(hr) : std::error_code{};
     }
+    std::error_code SetMuted(bool muted) override {
+        Guard guard(Hold());
+        ComPtr<ICoreWebView2_8> core;
+        HRESULT hr = core_.As(&core);
+        if (FAILED(hr)) {
+            return HrError(hr);
+        }
+        hr = core->put_IsMuted(muted ? TRUE : FALSE);
+        return FAILED(hr) ? HrError(hr) : std::error_code{};
+    }
     std::error_code SetVisible(bool visible) override {
         Guard guard(Hold());
         HRESULT hr = controller_->put_IsVisible(visible ? TRUE : FALSE);

@@ -82,6 +82,8 @@ public:
                                              Callbacks callbacks);
     // 未就绪时失败。成功不表示页面加载完成。
     [[nodiscard]] std::error_code Navigate(std::string url);
+    // 未就绪时失败，不缓存静音状态。
+    [[nodiscard]] std::error_code SetMuted(bool muted);
     [[nodiscard]] std::error_code SetVisible(bool visible);
     // 尺寸使用原生客户区单位，而非 Qt 逻辑像素。
     [[nodiscard]] std::error_code Resize(int width, int height);

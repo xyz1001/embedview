@@ -41,6 +41,7 @@ public:
     [[nodiscard]] std::error_code Initialize(Options options,
                                              Callbacks callbacks);
     [[nodiscard]] std::error_code Navigate(std::string url);
+    [[nodiscard]] std::error_code SetMuted(bool muted);
     bool IsReady() const noexcept;
     void CloseBrowser() noexcept;
 

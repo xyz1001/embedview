@@ -47,6 +47,7 @@ public:
     virtual ~Backend() = default;
     virtual void BeginInitialize(Options options, BackendEvents events) = 0;
     virtual std::error_code Navigate(std::string url) = 0;
+    virtual std::error_code SetMuted(bool muted) = 0;
     virtual std::error_code SetVisible(bool visible) = 0;
     virtual std::error_code Resize(int width, int height) = 0;
     virtual std::error_code SynchronizeBounds() = 0;
